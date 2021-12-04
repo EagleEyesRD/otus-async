@@ -5,6 +5,7 @@
 #include <mutex>
 #include "processor/utils.h"
 #include "processor/threadpool.h"
+#include "processor/logger.h"
 
 namespace async {
 

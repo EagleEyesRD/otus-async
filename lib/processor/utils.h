@@ -1,4 +1,5 @@
 #pragma once
+#include "logger.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -8,7 +9,7 @@ class PackManager {
     std::vector<std::string> statpack;
     std::vector<std::string> dynampack;
 public:
-    PackManager(size_t num_commands);
+    explicit PackManager(size_t num_commands);
     void Process(std::istream& source_stream);
     void getData(const std::string& data);
     bool IsRunPacketFile(std::string command);
@@ -19,7 +20,9 @@ private:
     bool AreThereSubPackets(std::vector<std::string>& vpack);
     bool IsEndOfStaticPacket(std::string command);
     size_t limit = 0;
+    size_t total_lines = 0;
     std::mutex process_mutex;
+    std::mutex data_mutex;	
 };
 
 

@@ -1,10 +1,13 @@
 #include "utils.h"
 void PackManager::Process(std::istream& source_stream) {
     std::lock_guard<std::mutex> guard{ process_mutex };
-    for (std::string line; std::getline(source_stream, line);)
-        if (IsRunPacketFile(line))
+    for (std::string line; std::getline(source_stream, line);) {
+        total_lines++;
+	if (IsRunPacketFile(line))
             RunPacket(line);
-
+    }
+    
+    total_blocks = 0;
 }
 
 void PackManager::getData(const std::string& line) {
@@ -30,6 +33,7 @@ bool PackManager::IsEndOfDymamicPacket(std::vector<std::string>& vpack) {
 }
 
 bool PackManager::IsStartOfDynamicPacket(std::string command, std::vector<std::string>& pack) {
+    std::lock_guard<std::mutex> guard{data_mutex};
     int cntOpenBrackets = 0;
     int cntCommands = 0;
     pack.push_back(command);
@@ -55,7 +59,8 @@ bool PackManager::AreThereSubPackets(std::vector<std::string>& vpack) {
     return cntOpenBrackets > 0 && cntCommands > 1;
 };
 
-bool PackManager::IsEndOfStaticPacket(std::string command) {//, size_t limit) {
+bool PackManager::IsEndOfStaticPacket(std::string command) {
+    std::lock_guard<std::mutex> guard{data_mutex};
     if (command == "EOF")
         return true;
 
@@ -72,9 +77,9 @@ bool PackManager::IsEndOfStaticPacket(std::string command) {//, size_t limit) {
     return statpack.size() == limit;
 };
 
-bool PackManager::IsRunPacketFile(std::string command) {//, size_t limit) {
+bool PackManager::IsRunPacketFile(std::string command) {
     if (dynampack.size() == 0) {
-        if (IsEndOfStaticPacket(command))//, limit))
+        if (IsEndOfStaticPacket(command))
             return true;
 
         return false;
@@ -97,7 +102,7 @@ void PackManager::RunPacket(std::string command){
             if (xcommand != "{")
                 if (xcommand != "}")
                     if (xcommand != "EOF")
-                        std::cout << xcommand << ", ";
+                        //std::cout << xcommand << ", ";
         statpack.clear();
     }
     else {
@@ -108,11 +113,18 @@ void PackManager::RunPacket(std::string command){
                     for (std::string& xcommand : dynampack)
                         if (xcommand != "{")
                             if (xcommand != "}")
-                                std::cout << xcommand << ", ";
+                                //std::cout << xcommand << ", ";
                 }
             }
             dynampack.clear();
         }
     }
-    std::cout << std::endl;
+}
+
+void PackManager::print_statistics(std::ostream& output_stream) {
+    std::lock_guard<std::mutex> guard{data_mutex};	
+    std::lock_guard<std::mutex> guard2{process_mutex};
+    output_stream << "main thread - "
+                  << total_lines << " lines, "
+                  << statpack.size() + dynampack.size() << " commands, " << std::endl;
 }
