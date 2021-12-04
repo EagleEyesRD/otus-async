@@ -1,5 +1,4 @@
 #include "async.h"
-//#include "command_processor.h"
 #include "processor/utils.h"
 
 namespace async {
@@ -11,27 +10,22 @@ namespace async {
     }
 
     void receive(handle_t handle, const char* data, std::size_t size) {
-        //impl::CommandProcessorsRouter::get_router().run_processor(handle, data, size);
         implementation::PackManagerAsync::get_router().run_pma(handle, data, size);
     }
 
     void disconnect(handle_t handle) {
-        //impl::CommandProcessorsRouter::get_router().remove_processor(handle);
         implementation::PackManagerAsync::get_router().remove_pma(handle);
     }
 
     void reserve_threads_for_tasks(std::size_t num_threads) {
-        //impl::CommandProcessorsRouter::get_router().reserve_threads(num_threads);
         implementation::PackManagerAsync::get_router().reserve_threads(num_threads);
     }
 
     void stop_all_tasks() {
-        //impl::CommandProcessorsRouter::get_router().stop_thread_pool();
         implementation::PackManagerAsync::get_router().stop_thread_pool();
     }
 
     void resume_tasks() {
-        //impl::CommandProcessorsRouter::get_router().resume_thread_pool();
         implementation::PackManagerAsync::get_router().resume_thread_pool();
     }
 }
