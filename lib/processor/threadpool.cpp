@@ -9,12 +9,14 @@ void ThreadPool::add_task(const std::function<void()>& task) {
 }
 
 void ThreadPool::configure_threads(size_t num_threads_) {
+    std::lock_guard<std::mutex> guard{tasks_mutex};
     suspend_work();
     num_threads = num_threads_;
     resume_work();
 }
 
 void ThreadPool::suspend_work() {
+    std::lock_guard<std::mutex> guard{tasks_mutex};
     if (working) {
         working = false;
         tasks_condition.notify_all();
@@ -26,6 +28,7 @@ void ThreadPool::suspend_work() {
 }
 
 void ThreadPool::resume_work() {
+    std::lock_guard<std::mutex> guard{tasks_mutex};
     if (!working) {
         for (int _ = 0; _ < num_threads; _++) {
             pool.emplace_back(std::thread([&] {

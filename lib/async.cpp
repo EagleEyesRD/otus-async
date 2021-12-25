@@ -46,7 +46,7 @@ namespace async::implementation {
             std::lock_guard<std::mutex> guard{ inner_data_mutex };
             handles[processor] = processor_shared;
         }
-        return processor;
+        return reinterpret_cast<handle_t>(processor);
     }
 
     void PackManagerAsync::run_pma(handle_t handle, const char* data, std::size_t size) {
