@@ -20,8 +20,7 @@ public:
     ~ThreadPool();
 
 private:
-    void task_runner(std::mutex& tasks_mutex,
-                     std::condition_variable& condition,
+    void task_runner(std::condition_variable& condition,
                      std::queue<std::function<void()>>& tasks);
 
     bool working = false;
@@ -30,5 +29,6 @@ private:
     std::vector<std::thread> pool;
     std::queue<std::function<void()>> tasks;
     std::mutex tasks_mutex;
+    std::mutex intro_mutex;
     std::condition_variable tasks_condition;
 };

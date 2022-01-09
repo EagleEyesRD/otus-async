@@ -16,7 +16,7 @@ void ThreadPool::configure_threads(size_t num_threads_) {
 }
 
 void ThreadPool::suspend_work() {
-    std::lock_guard<std::mutex> guard{tasks_mutex};
+    std::lock_guard<std::mutex> guard{intro_mutex};
     if (working) {
         working = false;
         tasks_condition.notify_all();
@@ -28,11 +28,11 @@ void ThreadPool::suspend_work() {
 }
 
 void ThreadPool::resume_work() {
-    std::lock_guard<std::mutex> guard{tasks_mutex};
+    std::lock_guard<std::mutex> guard{intro_mutex};
     if (!working) {
         for (int _ = 0; _ < num_threads; _++) {
             pool.emplace_back(std::thread([&] {
-                this->task_runner(tasks_mutex, tasks_condition, tasks);
+                this->task_runner(tasks_condition, tasks);
             }));
         }
         working = true;
@@ -43,19 +43,17 @@ ThreadPool::~ThreadPool() {
    suspend_work();
 }
 
-void ThreadPool::task_runner(std::mutex& tasks_mutex,
-                             std::condition_variable& condition,
+void ThreadPool::task_runner(std::condition_variable& condition,
                              std::queue<std::function<void()>>& tasks) {
     while (true) {
         std::function<void()> task;
         {
-            std::unique_lock<std::mutex> lock{tasks_mutex};
-            while (working && tasks.empty())
-                condition.wait(lock);
+            std::unique_lock<std::mutex> lock{intro_mutex};
+            condition.wait(lock);
             if (!tasks.empty()) {
                 task = tasks.front();
                 tasks.pop();
-            } else if (!working) {
+            } else if (!working && tasks.empty()) {
                 return;
             }
         }

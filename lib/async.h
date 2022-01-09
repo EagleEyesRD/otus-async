@@ -9,7 +9,7 @@
 
 namespace async {
 
-    using handle_t = std::uint64_t;
+    using handle_t = void *;
 
     handle_t connect(std::size_t bulk);
 
